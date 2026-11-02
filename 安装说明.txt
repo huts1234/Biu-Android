@@ -1,0 +1,40 @@
+Biu for Android 0.2.1
+=====================
+
+一、安装包（apk/）
+- Biu-for-Phone-0.2.1.apk   手机版，包名 com.biu.music.phone
+- Biu-for-Pad-0.2.1.apk     平板 / 折叠屏版，包名 com.biu.music.pad
+- SHA256SUMS.txt             两个安装包的 SHA-256 校验值
+
+系统要求：Android 7.0（API 24）及以上。
+两个包名不同，可以在同一台设备上同时安装。
+两个安装包使用同一张证书签名，可直接覆盖安装同包名的新版本。
+从 1.16.0 升级请先卸载旧版（WebView origin 从 https 改为 http，旧数据不会迁移）。
+
+二、源码
+本目录除 apk/ 外，就是 Biu for Android 0.2.1 的完整源码（含桌面端 Biu 代码）。
+构建环境：
+- Node.js 22.17.1+
+- pnpm 10.x（没有时执行 corepack enable）
+- JDK 21
+- Android SDK Platform 36、Build-Tools 36.0.0
+
+构建命令：
+  pnpm install
+  pnpm mobile:apk:phone
+  pnpm mobile:apk:pad
+
+输出：
+  mobile/android/app/build/outputs/apk/phone/release/app-phone-release.apk
+  mobile/android/app/build/outputs/apk/pad/release/app-pad-release.apk
+
+更多说明见 README.md 与 mobile/README.md。
+
+三、签名与安全
+源码包内不包含签名私钥（mobile/android/keystore/ 与 keystore.properties 已排除）。
+如需自行构建已签名的 release 包，请按 mobile/README.md 的“签名”一节配置自己的 keystore。
+
+四、许可证
+PolyForm Noncommercial License 1.0.0，详见 LICENSE。
+允许个人学习、研究、私人娱乐与业余项目；禁止任何商业用途。
+需要商用授权请联系 https://github.com/huts1234。

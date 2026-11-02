@@ -1,0 +1,15 @@
+{
+  "name": "biu-mobile",
+  "version": "0.2.1",
+  "private": true,
+  "type": "module",
+  "description": "Biu for Phone / Biu for Pad — Capacitor Android shell",
+  "dependencies": {
+    "@capacitor/android": "^8.5.3",
+    "@capacitor/app": "^8.1.2",
+    "@capacitor/core": "^8.5.3",
+    "@capacitor/haptics": "^8.0.2",
+    "@capacitor/keyboard": "^8.0.6",
+    "@capacitor/status-bar": "^8.0.4"
+  }
+}

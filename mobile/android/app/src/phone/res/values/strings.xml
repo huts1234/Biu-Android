@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Biu for Phone</string>
+    <string name="title_activity_main">Biu for Phone</string>
+    <string name="package_name">com.biu.music.phone</string>
+    <string name="custom_url_scheme">com.biu.music.phone</string>
+</resources>

@@ -1,0 +1,39 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "strict": true,
+    "noImplicitAny": false,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "verbatimModuleSyntax": true,
+    "forceConsistentCasingInFileNames": true,
+    "useDefineForClassFields": true,
+    "types": ["vite/client"],
+    "baseUrl": ".",
+    "paths": {
+      "@/store/user": ["./src/shims/store-user.ts"],
+      "@/store/token": ["./src/shims/store-token.ts"],
+      "@/store/settings": ["./src/shims/store-settings.ts"],
+      "@heroui/react": ["./src/shims/heroui.ts"],
+      "electron-log/renderer": ["./src/lib/logger.ts"],
+      "@/common/utils/geetest": ["./src/lib/geetest.ts"],
+      "@/*": ["../src/*"],
+      "@shared/*": ["../shared/*"],
+      "@m/*": ["./src/*"]
+    }
+  },
+  "include": [
+    "src",
+    "vite.config.ts",
+    "../shared/types/**/*.d.ts",
+    "../src/types/**/*.d.ts",
+    "../src/service/request/axios.d.ts"
+  ]
+}

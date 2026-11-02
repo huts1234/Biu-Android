@@ -1,0 +1,37 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Biu preview harness</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        background: #111;
+        display: flex;
+        align-items: flex-start;
+        justify-content: flex-start;
+        font-family: -apple-system, sans-serif;
+      }
+      iframe {
+        border: 0;
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <iframe id="frame" title="device frame" aria-label="device frame" tabindex="0"></iframe>
+    <script>
+      const params = new URLSearchParams(location.search);
+      const w = Number(params.get("w") || 390);
+      const h = Number(params.get("h") || 844);
+      const ui = params.get("ui") || (w >= 700 ? "pad" : "phone");
+      const path = params.get("path") || "/";
+      const frame = document.getElementById("frame");
+      frame.width = w;
+      frame.height = h;
+      // ui=auto lets the app decide from its own settings + window width.
+      frame.src = ui === "auto" ? `/#${path}` : `/?ui=${ui}#${path}`;
+    </script>
+  </body>
+</html>

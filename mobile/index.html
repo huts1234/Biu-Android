@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no"
+    />
+    <meta name="theme-color" content="#f2f2f7" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="format-detection" content="telephone=no" />
+    <title>Biu</title>
+    <style>
+      html,
+      body,
+      #root {
+        height: 100%;
+        margin: 0;
+      }
+      body {
+        background: #f2f2f7;
+        font-family:
+          -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "Noto Sans SC", system-ui, sans-serif;
+        -webkit-font-smoothing: antialiased;
+      }
+      #splash {
+        display: flex;
+        height: 100%;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 18px;
+      }
+      #splash .mark {
+        display: flex;
+        width: 76px;
+        height: 76px;
+        align-items: center;
+        justify-content: center;
+        border-radius: 20px;
+        background: linear-gradient(135deg, #ff375f 0%, #ff6482 45%, #ff9f0a 100%);
+        box-shadow: 0 16px 40px rgba(255, 55, 95, 0.32);
+        color: #fff;
+      }
+      #splash .name {
+        color: #1c1c1e;
+        font-size: 22px;
+        font-weight: 700;
+        letter-spacing: -0.4px;
+      }
+      #splash .dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 999px;
+        background: #ff375f;
+        animation: splash-pulse 1.1s ease-in-out infinite;
+      }
+      @keyframes splash-pulse {
+        0%,
+        100% {
+          opacity: 0.25;
+          transform: scale(0.8);
+        }
+        50% {
+          opacity: 1;
+          transform: scale(1.25);
+        }
+      }
+      @media (prefers-color-scheme: dark) {
+        body {
+          background: #000;
+        }
+        #splash .name {
+          color: #fff;
+        }
+      }
+      /* The stored theme wins over the system preference while booting. */
+      html.boot-light body {
+        background: #f2f2f7;
+      }
+      html.boot-light #splash .name {
+        color: #1c1c1e;
+      }
+      html.boot-dark body {
+        background: #000;
+      }
+      html.boot-dark #splash .name {
+        color: #fff;
+      }
+    </style>
+    <script>
+      // Resolve the persisted theme before the first paint so that a light-theme
+      // launch does not flash the dark launch screen (and vice versa).
+      (function () {
+        try {
+          var raw = localStorage.getItem("biu.mobile.appapp");
+          var mode = raw ? (JSON.parse(raw).state || {}).themeMode : "system";
+          var systemDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+          var dark = mode === "dark" || ((!mode || mode === "system") && systemDark);
+          document.documentElement.dataset.theme = dark ? "dark" : "light";
+          document.documentElement.style.colorScheme = dark ? "dark" : "light";
+          document.documentElement.classList.add(dark ? "boot-dark" : "boot-light");
+        } catch (error) {
+          /* storage unavailable — fall back to the media query */
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root">
+      <div id="splash">
+        <div class="mark">
+          <svg fill="none" height="38" viewBox="0 0 24 24" width="38">
+            <path
+              d="M9 18V6.5l9-2.2v10.4"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="1.8"
+            />
+            <circle cx="6.6" cy="18.2" fill="currentColor" r="2.6" />
+            <circle cx="15.6" cy="15.4" fill="currentColor" r="2.6" />
+          </svg>
+        </div>
+        <div class="name">Biu</div>
+        <div class="dot"></div>
+      </div>
+    </div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

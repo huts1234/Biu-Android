@@ -1,0 +1,137 @@
+name: Android Release
+
+# Push a tag like v0.2.1 (or run this workflow manually) to build both APKs,
+# sign them with the keystore stored in repository secrets, and attach them to
+# a GitHub Release. See docs/GITHUB.md for the required secrets.
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag, must match mobile/package.json (e.g. v0.2.1)"
+        required: true
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Build & publish APKs
+    runs-on: ubuntu-latest
+    env:
+      HUSKY: 0
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Setup JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android SDK packages
+        run: |
+          yes | sdkmanager --licenses >/dev/null || true
+          sdkmanager "platform-tools" "platforms;android-36" "build-tools;36.0.0"
+
+      - name: Setup Gradle cache
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Resolve release tag
+        id: meta
+        run: |
+          VERSION=$(node -p "require('./mobile/package.json').version")
+          TAG="${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}"
+          if [ "$TAG" != "v$VERSION" ]; then
+            echo "::error::Tag '$TAG' does not match mobile/package.json version 'v$VERSION'."
+            exit 1
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile --ignore-scripts
+
+      - name: Restore signing key
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          if [ -z "$ANDROID_KEYSTORE_BASE64" ]; then
+            echo "::error::Missing ANDROID_KEYSTORE_BASE64 secret. See docs/GITHUB.md."
+            exit 1
+          fi
+          mkdir -p mobile/android/keystore
+          printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > mobile/android/keystore/release.jks
+          cat > mobile/android/keystore.properties <<EOF
+          storeFile=keystore/release.jks
+          storePassword=$ANDROID_KEYSTORE_PASSWORD
+          keyAlias=$ANDROID_KEY_ALIAS
+          keyPassword=$ANDROID_KEY_PASSWORD
+          EOF
+
+      - name: Build signed APKs
+        run: |
+          pnpm mobile:apk:phone
+          pnpm mobile:apk:pad
+
+      - name: Verify signatures
+        run: |
+          BUILD_TOOLS="$ANDROID_HOME/build-tools/36.0.0"
+          "$BUILD_TOOLS/apksigner" verify --print-certs \
+            mobile/android/app/build/outputs/apk/phone/release/app-phone-release.apk
+          "$BUILD_TOOLS/apksigner" verify --print-certs \
+            mobile/android/app/build/outputs/apk/pad/release/app-pad-release.apk
+
+      - name: Prepare release assets
+        id: assets
+        run: |
+          VERSION="${{ steps.meta.outputs.version }}"
+          mkdir -p release
+          cp mobile/android/app/build/outputs/apk/phone/release/app-phone-release.apk \
+            "release/Biu-for-Phone-$VERSION.apk"
+          cp mobile/android/app/build/outputs/apk/pad/release/app-pad-release.apk \
+            "release/Biu-for-Pad-$VERSION.apk"
+          (cd release && sha256sum ./*.apk > SHA256SUMS.txt)
+          ls -lh release
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.meta.outputs.tag }}
+          name: Biu for Android ${{ steps.meta.outputs.version }}
+          files: release/*
+          fail_on_unmatched_files: true
+          generate_release_notes: true
+          body: |
+            **Biu for Phone** 与 **Biu for Pad** `v${{ steps.meta.outputs.version }}`。
+
+            | 文件 | 说明 |
+            | --- | --- |
+            | `Biu-for-Phone-${{ steps.meta.outputs.version }}.apk` | 手机版（`com.biu.music.phone`） |
+            | `Biu-for-Pad-${{ steps.meta.outputs.version }}.apk` | 平板版（`com.biu.music.pad`） |
+            | `SHA256SUMS.txt` | 安装包校验值 |
+
+            两个 APK 使用同一证书签名。升级时请直接覆盖安装同包名的新版本；从 1.16.0 升级请先卸载旧版。
+
+            完整更新说明见提交记录。
